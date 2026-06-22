@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+button,
+a,
+label,
+input,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+[role="button"] {
+  touch-action: manipulation;
+}
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  scroll-behavior: smooth;
+  overflow-x: clip;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  overflow-x: clip;
+  background: #faf7ef;
+  color: #1f385f;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: #d7c08a;
+  color: #071220;
+}
+
+summary:focus-visible,
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #d7c08a;
+  outline-offset: 3px;
+}
+
+@layer components {
+  .button-primary {
+    @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-gold px-6 py-3 text-center text-sm font-bold text-forest-950 transition hover:bg-sand-100 sm:py-4;
+  }
+
+  .button-dark {
+    @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-forest-900 px-6 py-3 text-center text-sm font-bold text-white transition hover:bg-forest-700 sm:py-4;
+  }
+
+  .button-outline-light {
+    @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-gold/60 px-6 py-3 text-center text-sm font-bold text-sand-100 transition hover:bg-white/10 sm:py-4;
+  }
+}

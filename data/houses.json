@@ -1,0 +1,155 @@
+[
+  {
+    "id": "house-water",
+    "name": "Скандинавський будиночок",
+    "slug": "Skandinavskiy-budynochok",
+    "shortDescription": "Камерний будиночок із власною терасою та ранками просто біля води.",
+    "fullDescription": "Тихий простір для двох або невеликої родини. Тут легко сповільнитися: заварити каву, вийти на дерев’яну терасу й зустріти ранок біля води. Усередині — тепле дерево, зручне ліжко, компактна кухня та все потрібне для неквапливого відпочинку.",
+    "pricePerNight": 3350,
+    "prices": {
+      "monWed": 3350,
+      "thu": 3850,
+      "friSun": 4850,
+      "sat": 5550
+    },
+    "guests": 4,
+    "area": 42,
+    "amenities": [
+      "Тераса біля води",
+      "Двоспальне ліжко",
+      "Розкладний диван",
+      "Мінікухня",
+      "Душ і санвузол",
+      "Кондиціонер",
+      "Wi-Fi",
+      "Мангал"
+    ],
+    "mainImage": "/images/house-water-exterior.svg",
+    "gallery": [
+      "/images/house-water-exterior.svg",
+      "/images/house-water-interior.svg",
+      "/images/house-terrace-exterior.svg"
+    ],
+    "bookedDates": [
+      "2026-06-01",
+      "2026-06-02"
+    ]
+  },
+  {
+    "id": "house-family",
+    "name": "Двоповерховий дуплекс",
+    "slug": "Dyplex",
+    "shortDescription": "Світлий і затишний простір для родинних вихідних серед зелені.",
+    "fullDescription": "Будиночок, у якому зручно всім: окрема спальня для батьків, комфортні місця для дітей і велика спільна зона. Поруч достатньо простору для ігор, прогулянок та вечері на свіжому повітрі.",
+    "pricePerNight": 3500,
+    "prices": {
+      "monWed": 3500,
+      "thu": 4400,
+      "friSun": 5000,
+      "sat": 5550
+    },
+    "guests": 4,
+    "area": 58,
+    "amenities": [
+      "Окрема спальня",
+      "Зона для дітей",
+      "Повноцінна кухня",
+      "Холодильник",
+      "Душ і санвузол",
+      "Опалення",
+      "Wi-Fi",
+      "Власний мангал"
+    ],
+    "mainImage": "/images/house-family-exterior.svg",
+    "gallery": [
+      "/images/house-family-exterior.svg",
+      "/images/house-family-interior.svg",
+      "/images/house-water-exterior.svg"
+    ],
+    "bookedDates": [
+      "2026-06-01",
+      "2026-06-02",
+      "2026-07-11",
+      "2026-07-12"
+    ]
+  },
+  {
+    "id": "house-terrace",
+    "name": "Будиночок зі зрубу",
+    "slug": "budynochok-z-zryby",
+    "shortDescription": "Простора тераса, багато світла й довгі вечори з видом на природу.",
+    "fullDescription": "Головне місце цього будиночка — велика крита тераса, де однаково добре снідати, читати чи збиратися на вечерю. Усередині — спокійні природні відтінки, простора вітальня та все необхідне для кількох днів без міської метушні.",
+    "pricePerNight": 2800,
+    "prices": {
+      "monWed": 2800,
+      "thu": 3500,
+      "friSun": 3500,
+      "sat": 3500
+    },
+    "guests": 6,
+    "area": 64,
+    "amenities": [
+      "Велика крита тераса",
+      "Дві спальні",
+      "Кухня",
+      "Посуд і текстиль",
+      "Душ і санвузол",
+      "Кондиціонер",
+      "Wi-Fi",
+      "Мангал"
+    ],
+    "mainImage": "/images/house-terrace-exterior.svg",
+    "gallery": [
+      "/images/house-terrace-exterior.svg",
+      "/images/house-terrace-interior.svg",
+      "/images/house-family-exterior.svg"
+    ],
+    "bookedDates": [
+      "2026-06-03",
+      "2026-06-04",
+      "2026-07-02",
+      "2026-07-03",
+      "2026-07-04"
+    ]
+  },
+  {
+    "id": "house-big",
+    "name": "Будинок з банею",
+    "slug": "velykyi-budynochok",
+    "shortDescription": "Комфортний будинок для дружніх зустрічей, свят і великих родин.",
+    "fullDescription": "Просторий будинок для тих, хто хоче відпочивати разом і водночас мати достатньо особистого простору. Велика вітальня збирає всіх за одним столом, а окремі спальні дарують тишу після насиченого дня.",
+    "pricePerNight": 5500,
+    "prices": {
+      "monWed": 5500,
+      "thu": 6500,
+      "friSun": 6500,
+      "sat": 6500
+    },
+    "guests": 6,
+    "area": 110,
+    "amenities": [
+      "Три окремі спальні",
+      "Велика вітальня",
+      "Обідній стіл на 10 осіб",
+      "Повноцінна кухня",
+      "Два санвузли",
+      "Кондиціонер",
+      "Wi-Fi",
+      "Власна альтанка"
+    ],
+    "mainImage": "/images/house-big-exterior.svg",
+    "gallery": [
+      "/images/house-big-exterior.svg",
+      "/images/house-big-interior.svg",
+      "/images/house-terrace-exterior.svg"
+    ],
+    "bookedDates": [
+      "2026-06-03",
+      "2026-06-04",
+      "2026-06-10",
+      "2026-07-05",
+      "2026-07-06",
+      "2026-07-07"
+    ]
+  }
+]
