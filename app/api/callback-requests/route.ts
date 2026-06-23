@@ -18,7 +18,10 @@ function validateRequest(body: Partial<CreateCallbackRequestInput>) {
   const comment = body.comment?.trim() || "";
   const source = body.source?.trim() || "";
   const houseName = body.houseName?.trim() || "";
-  const selectedDates = Array.from(new Set(body.selectedDates || []));
+  const selectedDates = Array.from(new Set([
+    ...(Array.isArray(body.selectedDates) ? body.selectedDates : []),
+    ...(body.selectedDate ? [body.selectedDate] : []),
+  ]));
 
   const nameError = validateUkrainianName(name);
   if (nameError) return nameError;
@@ -36,6 +39,7 @@ function validateRequest(body: Partial<CreateCallbackRequestInput>) {
     phone: formatUkrainianPhone(phone),
     comment: comment || undefined,
     source,
+    selectedDate: selectedDates[0],
     selectedDates: selectedDates.length ? selectedDates : undefined,
     houseName: houseName || undefined,
   };
@@ -48,9 +52,17 @@ export async function GET() {
       headers: { "Cache-Control": "no-store, max-age=0" },
     });
   }
-  return NextResponse.json(await getCallbackRequests(), {
-    headers: { "Cache-Control": "no-store, max-age=0" },
-  });
+  try {
+    return NextResponse.json(await getCallbackRequests(), {
+      headers: { "Cache-Control": "no-store, max-age=0" },
+    });
+  } catch (error) {
+    console.error("Не вдалося отримати заявки:", error);
+    return NextResponse.json({ error: "Не вдалося отримати заявки." }, {
+      status: 500,
+      headers: { "Cache-Control": "no-store, max-age=0" },
+    });
+  }
 }
 
 export async function POST(request: Request) {

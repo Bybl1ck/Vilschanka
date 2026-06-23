@@ -6,6 +6,7 @@ export interface CallbackRequest {
   phone: string;
   comment?: string;
   source: string;
+  selectedDate?: string;
   selectedDates?: string[];
   houseName?: string;
   status: CallbackRequestStatus;
@@ -17,6 +18,7 @@ export interface CreateCallbackRequestInput {
   phone: string;
   comment?: string;
   source: string;
+  selectedDate?: string;
   selectedDates?: string[];
   houseName?: string;
 }

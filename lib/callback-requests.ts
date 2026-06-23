@@ -1,69 +1,102 @@
 import { randomUUID } from "crypto";
-import { promises as fs } from "fs";
-import path from "path";
+import { getSupabase } from "@/lib/supabase";
 import type {
   CallbackRequest,
   CallbackRequestStatus,
   CreateCallbackRequestInput,
 } from "@/types/callback-request";
 
-const dataFile = path.join(process.cwd(), "data", "callback-requests.json");
-let writeQueue: Promise<void> = Promise.resolve();
-
-async function readRequests(): Promise<CallbackRequest[]> {
-  try {
-    const raw = await fs.readFile(dataFile, "utf8");
-    return JSON.parse(raw) as CallbackRequest[];
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
-    throw error;
-  }
+interface CallbackRequestRow {
+  id: string;
+  name: string;
+  phone: string;
+  comment: string | null;
+  source: string;
+  house_name: string | null;
+  selected_date: string | null;
+  selected_dates: string[] | null;
+  status: string | null;
+  created_at: string;
 }
 
-async function writeRequests(requests: CallbackRequest[]) {
-  await fs.mkdir(path.dirname(dataFile), { recursive: true });
-  await fs.writeFile(dataFile, `${JSON.stringify(requests, null, 2)}\n`, "utf8");
+function normalizeStatus(status: string | null): CallbackRequestStatus {
+  return status === "called" || status === "archived" ? status : "new";
 }
 
-function serialized<T>(operation: () => Promise<T>): Promise<T> {
-  const result = writeQueue.then(operation, operation);
-  writeQueue = result.then(() => undefined, () => undefined);
-  return result;
+function mapCallbackRequest(row: CallbackRequestRow): CallbackRequest {
+  const selectedDates = row.selected_dates?.length
+    ? row.selected_dates
+    : row.selected_date
+      ? [row.selected_date]
+      : undefined;
+
+  return {
+    id: row.id,
+    name: row.name,
+    phone: row.phone,
+    comment: row.comment || undefined,
+    source: row.source,
+    houseName: row.house_name || undefined,
+    selectedDate: row.selected_date || undefined,
+    selectedDates,
+    status: normalizeStatus(row.status),
+    createdAt: row.created_at,
+  };
 }
 
 export async function getCallbackRequests(): Promise<CallbackRequest[]> {
-  const requests = await readRequests();
-  return requests.sort((left, right) => right.createdAt.localeCompare(left.createdAt));
+  const { data, error } = await getSupabase()
+    .from("callback_requests")
+    .select("id,name,phone,comment,source,house_name,selected_date,selected_dates,status,created_at")
+    .order("created_at", { ascending: false });
+
+  if (error) throw new Error(`Не вдалося отримати заявки з Supabase: ${error.message}`);
+  return ((data || []) as CallbackRequestRow[]).map(mapCallbackRequest);
 }
 
-export function createCallbackRequest(input: CreateCallbackRequestInput): Promise<CallbackRequest> {
-  return serialized(async () => {
-    const requests = await readRequests();
-    const callbackRequest: CallbackRequest = {
+export async function createCallbackRequest(input: CreateCallbackRequestInput): Promise<CallbackRequest> {
+  const selectedDates = input.selectedDates?.length
+    ? input.selectedDates
+    : input.selectedDate
+      ? [input.selectedDate]
+      : undefined;
+  const selectedDate = input.selectedDate || selectedDates?.[0] || null;
+
+  const { data, error } = await getSupabase()
+    .from("callback_requests")
+    .insert({
       id: randomUUID(),
       name: input.name,
       phone: input.phone,
-      comment: input.comment,
+      comment: input.comment || null,
       source: input.source,
-      selectedDates: input.selectedDates,
-      houseName: input.houseName,
+      house_name: input.houseName || null,
+      selected_date: selectedDate,
+      selected_dates: selectedDates || null,
+      // Статус завжди задає сервер, значення від клієнта не використовується.
       status: "new",
-      createdAt: new Date().toISOString(),
-    };
-    requests.unshift(callbackRequest);
-    await writeRequests(requests);
-    return callbackRequest;
-  });
+      created_at: new Date().toISOString(),
+    })
+    .select("id,name,phone,comment,source,house_name,selected_date,selected_dates,status,created_at")
+    .single();
+
+  if (error || !data) {
+    throw new Error(`Не вдалося створити заявку в Supabase: ${error?.message || "порожня відповідь"}`);
+  }
+  return mapCallbackRequest(data as CallbackRequestRow);
 }
 
-export function updateCallbackRequestStatus(id: string, status: CallbackRequestStatus): Promise<CallbackRequest | null> {
-  return serialized(async () => {
-    const requests = await readRequests();
-    const index = requests.findIndex((request) => request.id === id);
-    if (index === -1) return null;
+export async function updateCallbackRequestStatus(
+  id: string,
+  status: CallbackRequestStatus,
+): Promise<CallbackRequest | null> {
+  const { data, error } = await getSupabase()
+    .from("callback_requests")
+    .update({ status })
+    .eq("id", id)
+    .select("id,name,phone,comment,source,house_name,selected_date,selected_dates,status,created_at")
+    .maybeSingle();
 
-    requests[index] = { ...requests[index], status };
-    await writeRequests(requests);
-    return requests[index];
-  });
+  if (error) throw new Error(`Не вдалося оновити заявку в Supabase: ${error.message}`);
+  return data ? mapCallbackRequest(data as CallbackRequestRow) : null;
 }
