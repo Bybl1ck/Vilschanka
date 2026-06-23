@@ -21,8 +21,9 @@ export function AdminHeader() {
       <div className="mx-auto flex h-[76px] max-w-[1500px] items-center justify-between px-4 sm:px-7">
         <div className="flex min-w-0 items-center gap-3">
           <BrandLogo
-            className="h-10 w-12 rounded-lg border border-gold/30 bg-white/5 p-1 sm:h-11 sm:w-14"
-            fallbackClassName="font-display text-xl text-gold"
+            className="h-9 w-20 overflow-hidden rounded sm:h-11 sm:w-28"
+            imageClassName="scale-[2.9] object-contain object-center"
+            fallbackClassName="font-display text-lg text-gold sm:text-xl"
             fallbackText="В"
           />
           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gold text-forest-950">

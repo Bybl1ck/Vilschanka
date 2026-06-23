@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Archive, CheckCircle2, Clock3, LoaderCircle, Phone, RefreshCw } from "lucide-react";
+import { Archive, CheckCircle2, Clock3, LoaderCircle, Phone, RefreshCw, Trash2 } from "lucide-react";
 import { formatUkrainianPhone, phoneToTelHref } from "@/lib/phone";
 import type { CallbackRequest, CallbackRequestStatus } from "@/types/callback-request";
 
@@ -115,6 +115,30 @@ export function CallbackRequestsPanel({ initialRequests }: { initialRequests: Ca
     }
   }
 
+  async function deleteRequest(id: string) {
+    const confirmed = window.confirm("Ви впевнені, що хочете видалити цю заявку? Цю дію неможливо скасувати.");
+    if (!confirmed || statusMutationInFlight.current) return;
+
+    statusMutationInFlight.current = true;
+    mutationVersion.current += 1;
+    setUpdatingId(id);
+    setActionError("");
+
+    try {
+      const response = await fetch(`/api/callback-requests/${id}`, { method: "DELETE" });
+      const body = await response.json() as { success?: boolean; error?: string };
+      if (!response.ok || !body.success) throw new Error(body.error);
+
+      setRequests((current) => current.filter((request) => request.id !== id));
+      setLastUpdated(new Date());
+    } catch {
+      setActionError("Не вдалося видалити заявку. Спробуйте ще раз.");
+    } finally {
+      statusMutationInFlight.current = false;
+      setUpdatingId(null);
+    }
+  }
+
   const counts = {
     new: requests.filter((request) => request.status === "new").length,
     called: requests.filter((request) => request.status === "called").length,
@@ -198,6 +222,15 @@ export function CallbackRequestsPanel({ initialRequests }: { initialRequests: Ca
                       {action.label}
                     </button>
                   ))}
+                  <button
+                    type="button"
+                    disabled={updatingId !== null}
+                    onClick={() => void deleteRequest(request.id)}
+                    className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-red-200 bg-white px-4 py-2.5 text-sm font-bold text-red-700 transition hover:border-red-300 hover:bg-red-50 disabled:opacity-60 min-[430px]:ml-auto min-[430px]:w-auto"
+                  >
+                    <Trash2 size={16} />
+                    Видалити заявку
+                  </button>
                 </div>
               </article>
             ))}

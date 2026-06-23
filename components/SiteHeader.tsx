@@ -40,11 +40,11 @@ export function SiteHeader() {
         </Container>
       </div>
       <Container className="flex h-[76px] items-center justify-between">
-        <Link href="/" className="group flex items-center" aria-label="Вільшанка — головна">
+        <Link href="/" className="flex items-center transition-opacity duration-200 ease-in-out hover:opacity-80" aria-label="Вільшанка — головна">
           <BrandLogo
-            className="h-12 w-32 overflow-hidden rounded-xl border border-gold/35 bg-forest-900 transition group-hover:border-gold/70 min-[390px]:h-14 min-[390px]:w-36 sm:h-16 sm:w-44"
-            imageClassName="!object-contain object-center"
-            fallbackClassName="grid h-full w-full place-items-center px-3 font-display text-xl text-gold sm:text-2xl"
+            className="h-11 w-32 overflow-hidden rounded-md min-[390px]:w-36 sm:h-14 sm:w-44"
+            imageClassName="scale-[3.05] object-contain object-center"
+            fallbackClassName="grid h-full w-full place-items-center font-display text-xl text-gold sm:text-2xl"
             fallbackText="Вільшанка"
           />
         </Link>

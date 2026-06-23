@@ -100,3 +100,15 @@ export async function updateCallbackRequestStatus(
   if (error) throw new Error(`Не вдалося оновити заявку в Supabase: ${error.message}`);
   return data ? mapCallbackRequest(data as CallbackRequestRow) : null;
 }
+
+export async function deleteCallbackRequest(id: string): Promise<boolean> {
+  const { data, error } = await getSupabase()
+    .from("callback_requests")
+    .delete()
+    .eq("id", id)
+    .select("id")
+    .maybeSingle();
+
+  if (error) throw new Error(`Не вдалося видалити заявку із Supabase: ${error.message}`);
+  return Boolean(data);
+}
