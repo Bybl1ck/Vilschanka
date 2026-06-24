@@ -3,11 +3,13 @@ import { Gift, Info, Medal } from "lucide-react";
 import { CallChoiceDialog } from "@/components/CallChoiceDialog";
 import { PageHero } from "@/components/PageHero";
 import { Container } from "@/components/ui/Container";
+import { getPageSetting } from "@/lib/page-settings";
 
 export const metadata: Metadata = {
   title: "Знижки та спеціальні пропозиції",
   description: "Знижки для іменинників і військовослужбовців у заміському комплексі Вільшанка.",
 };
+export const dynamic = "force-dynamic";
 
 const offers = [
   {
@@ -24,13 +26,15 @@ const offers = [
   },
 ];
 
-export default function DiscountsPage() {
+export default async function DiscountsPage() {
+  const heroSetting = await getPageSetting("discounts");
   return (
     <>
       <PageHero
         eyebrow="Особливі умови"
         title="Знижки та спеціальні пропозиції"
         text="Ми цінуємо наших гостей і підготували приємні умови для особливих випадків."
+        image={heroSetting.backgroundImage}
       />
 
       <section className="bg-sand-50 py-20 sm:py-28">

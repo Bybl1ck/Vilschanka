@@ -17,8 +17,10 @@ import {
 } from "@/lib/constants";
 import { getHouseBySlug } from "@/lib/houses";
 import { validDateKeys } from "@/lib/date";
+import { getPageSetting } from "@/lib/page-settings";
 
 export const metadata: Metadata = { title: "Контакти", description: "Телефони, адреса та соціальні мережі заміського комплексу Вільшанка." };
+export const dynamic = "force-dynamic";
 
 export default async function ContactsPage({
   searchParams,
@@ -28,11 +30,14 @@ export default async function ContactsPage({
   const query = await searchParams;
   const rawHouse = Array.isArray(query.house) ? query.house[0] : query.house;
   const selectedDates = validDateKeys(query.dates || query.date);
-  const selectedHouse = rawHouse ? await getHouseBySlug(rawHouse) : undefined;
+  const [selectedHouse, heroSetting] = await Promise.all([
+    rawHouse ? getHouseBySlug(rawHouse) : Promise.resolve(undefined),
+    getPageSetting("contacts"),
+  ]);
 
   return (
     <>
-      <PageHero eyebrow="Ми на зв’язку" title="Заплануймо ваш відпочинок" text="Зателефонуйте, щоб уточнити вільні дати, умови проживання, меню чи організацію свята." />
+      <PageHero eyebrow="Ми на зв’язку" title="Заплануймо ваш відпочинок" text="Зателефонуйте, щоб уточнити вільні дати, умови проживання, меню чи організацію свята." image={heroSetting.backgroundImage} />
       <section className="bg-sand-50 py-20 sm:py-28">
         <Container>
           <div className="grid gap-6 lg:grid-cols-[.85fr_1.15fr]">

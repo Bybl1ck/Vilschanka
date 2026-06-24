@@ -4,6 +4,7 @@ import { HouseCard } from "@/components/HouseCard";
 import { PageHero } from "@/components/PageHero";
 import { Container } from "@/components/ui/Container";
 import { getHouses } from "@/lib/houses";
+import { getPageSetting } from "@/lib/page-settings";
 
 export const metadata: Metadata = {
   title: "Будиночки для відпочинку",
@@ -13,11 +14,14 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function HousesPage() {
-  const houses = await getHouses();
+  const [houses, heroSetting] = await Promise.all([
+    getHouses(),
+    getPageSetting("houses"),
+  ]);
 
   return (
     <>
-      <PageHero eyebrow="Жити ближче до природи" title="Будиночки для вашого відпочинку" text="Від камерного будиночка для двох до просторого дому для великої компанії. У кожного — свій характер, тераса й природа поруч." />
+      <PageHero eyebrow="Жити ближче до природи" title="Будиночки для вашого відпочинку" text="Від камерного будиночка для двох до просторого дому для великої компанії. У кожного — свій характер, тераса й природа поруч." image={heroSetting.backgroundImage} />
       <section className="bg-sand-50 py-20 sm:py-28">
         <Container>
           <div className="grid gap-8 md:grid-cols-2">

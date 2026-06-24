@@ -19,6 +19,7 @@ npm run dev
 ## Де змінювати дані
 
 - Будиночки, ціни, зручності, фото-шляхи та зайняті дати: через `/vilshanka-control`; зміни зберігаються в таблиці Supabase `houses`.
+- Фонові hero-зображення шести основних сторінок: у блоці «Фони сторінок» через `/vilshanka-control`; URL зберігаються в таблиці Supabase `page_settings`.
 - `data/houses.json` використовується для першого seed і як резервне публічне відображення, якщо Supabase тимчасово недоступний або таблиця ще не створена.
 - Заявки на зворотний дзвінок: у розділі «Заявки» за адресою `/vilshanka-control`; дані зберігаються в таблиці Supabase `callback_requests`.
 
@@ -56,7 +57,9 @@ npm run seed:houses
 
 Seed використовує `upsert` за `id`, тому його можна запускати повторно без дублювання будиночків. Для посиленого production-захисту серверних записів можна додати `SUPABASE_SERVICE_ROLE_KEY` у Vercel; ця змінна ніколи не повинна мати префікс `NEXT_PUBLIC_`.
 
-Перед першим завантаженням фото виконайте `supabase/storage.sql` у Supabase SQL Editor і додайте `SUPABASE_SERVICE_ROLE_KEY` локально та у Vercel. Bucket `house-images` має бути public. Старі локальні шляхи `/images/...` продовжують працювати.
+Перед першим завантаженням фото виконайте `supabase/storage.sql` у Supabase SQL Editor і додайте `SUPABASE_SERVICE_ROLE_KEY` локально та у Vercel. Bucket `house-images` має бути public. Фото будиночків зберігаються у папці `houses`, фони сторінок — у папці `pages`. Старі локальні шляхи `/images/...` продовжують працювати.
+
+Для керування фонами виконайте `supabase/page-settings.sql` у Supabase SQL Editor. Файл створює таблицю `page_settings`, шість початкових записів і публічну read-only RLS-політику; зміни виконує лише захищений server API через service role key.
 
 ## Перевірка production-збірки
 

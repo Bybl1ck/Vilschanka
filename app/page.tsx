@@ -18,6 +18,7 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 import { HouseCard } from "@/components/HouseCard";
 import { CallChoiceDialog } from "@/components/CallChoiceDialog";
 import { getHouses } from "@/lib/houses";
+import { getPageSetting } from "@/lib/page-settings";
 import { RESTAURANT_MENU_URL } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
@@ -34,12 +35,15 @@ const benefits = [
 const celebrationTypes = ["Весілля", "Корпоративи", "Дні народження", "Ювілеї", "Гендер-паті", "Сімейні свята"];
 
 export default async function HomePage() {
-  const houses = await getHouses();
+  const [houses, heroSetting] = await Promise.all([
+    getHouses(),
+    getPageSetting("home"),
+  ]);
 
   return (
     <>
       <section className="relative flex min-h-[720px] items-end overflow-hidden bg-forest-950 pt-[110px] text-white sm:min-h-[854px]">
-        <Image src="/images/hero-lake.svg" alt="Будиночок Вільшанки серед природи біля води" fill priority className="object-cover object-[68%_center] opacity-85 sm:object-center" sizes="100vw" />
+        <Image src={heroSetting.backgroundImage} alt="Будиночок Вільшанки серед природи біля води" fill priority className="object-cover object-[68%_center] opacity-85 sm:object-center" sizes="100vw" />
         <div className="absolute inset-0 bg-gradient-to-r from-forest-950/95 via-forest-950/50 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-forest-950 via-transparent to-forest-950/20" />
         <Container className="relative pb-12 sm:pb-20 lg:pb-24">

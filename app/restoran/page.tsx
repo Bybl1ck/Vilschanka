@@ -6,8 +6,10 @@ import { PageHero } from "@/components/PageHero";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { RESTAURANT_MENU_URL } from "@/lib/constants";
+import { getPageSetting } from "@/lib/page-settings";
 
 export const metadata: Metadata = { title: "Ресторан", description: "Ресторан Вільшанки для сімейних вечерь, святкувань і теплих зустрічей." };
+export const dynamic = "force-dynamic";
 
 const events = [
   { icon: CakeSlice, label: "День народження" },
@@ -25,10 +27,11 @@ const restaurantTerms = [
   { icon: UsersRound, title: "Обслуговування для компаній", text: "Для компаній від 8 людей до чеку додається 10% обслуговування.", accent: "від 8 гостей · 10%" },
 ];
 
-export default function RestaurantPage() {
+export default async function RestaurantPage() {
+  const heroSetting = await getPageSetting("restaurant");
   return (
     <>
-      <PageHero eyebrow="Їжа, що збирає разом" title="Ресторан «Вільшанка»" text="Тепла кухня, сезонні продукти й атмосфера, у якій хочеться залишитися ще на одну розмову." image="/images/house-big-interior.svg" />
+      <PageHero eyebrow="Їжа, що збирає разом" title="Ресторан «Вільшанка»" text="Тепла кухня, сезонні продукти й атмосфера, у якій хочеться залишитися ще на одну розмову." image={heroSetting.backgroundImage} />
       <section className="bg-sand-50 py-20 sm:py-28">
         <Container>
           <div className="grid gap-14 lg:grid-cols-2 lg:items-center lg:gap-24">

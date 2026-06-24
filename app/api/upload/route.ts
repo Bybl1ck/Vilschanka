@@ -39,6 +39,8 @@ export async function POST(request: Request) {
   try {
     const formData = await request.formData();
     const files = formData.getAll("files").filter((entry): entry is File => entry instanceof File);
+    const requestedFolder = formData.get("folder");
+    const folder = requestedFolder === "pages" ? "pages" : "houses";
     if (!files.length) {
       return NextResponse.json({ error: "Оберіть щонайменше одне зображення." }, { status: 400 });
     }
@@ -62,7 +64,7 @@ export async function POST(request: Request) {
 
     const supabase = getSupabaseServiceRole();
     const now = new Date();
-    const directory = `houses/${now.getUTCFullYear()}/${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
+    const directory = `${folder}/${now.getUTCFullYear()}/${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
     const urls: string[] = [];
 
     for (const { file, buffer, extension } of uploads) {

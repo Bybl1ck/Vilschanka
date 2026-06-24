@@ -4,8 +4,10 @@ import { PageHero } from "@/components/PageHero";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { PHONE_PRIMARY_HREF } from "@/lib/constants";
+import { getPageSetting } from "@/lib/page-settings";
 
 export const metadata: Metadata = { title: "Активності", description: "Риболовля, баня, SUP-дошки, каяки, альтанки та відпочинок біля води у Вільшанці." };
+export const dynamic = "force-dynamic";
 
 const activities = [
   { icon: Fish, number: "01", title: "Риболовля", text: "Знайдіть своє тихе місце біля води й дозвольте ранку тривати довше. Підійде і досвідченим рибалкам, і тим, хто хоче спробувати вперше." },
@@ -16,10 +18,11 @@ const activities = [
   { icon: Sun, number: "06", title: "Відпочинок біля води", text: "Іноді найкращий план — не планувати нічого. Плед, книжка, берег і багато часу попереду." },
 ];
 
-export default function ActivitiesPage() {
+export default async function ActivitiesPage() {
+  const heroSetting = await getPageSetting("activities");
   return (
     <>
-      <PageHero eyebrow="День у своєму ритмі" title="На воді, біля вогню, серед тиші" text="Будьте активними або не робіть нічого — у «Вільшанці» обидва плани однаково правильні." />
+      <PageHero eyebrow="День у своєму ритмі" title="На воді, біля вогню, серед тиші" text="Будьте активними або не робіть нічого — у «Вільшанці» обидва плани однаково правильні." image={heroSetting.backgroundImage} />
       <section className="bg-forest-900 py-16 text-sand-100 sm:py-24">
         <Container>
           <div className="grid gap-8 rounded-[2rem] border border-gold/25 bg-forest-800 p-6 sm:p-10 lg:grid-cols-[1fr_auto] lg:items-center lg:p-12">

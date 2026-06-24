@@ -88,6 +88,7 @@ export function AdminDashboard({ initialHouses }: { initialHouses: House[] }) {
     setUploading(target);
     setUploadError("");
     const formData = new FormData();
+    formData.append("folder", "houses");
     files.forEach((file) => formData.append("files", file));
 
     try {

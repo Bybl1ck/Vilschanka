@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Check, Home, Phone, Ruler, Users } from "lucide-react";
@@ -7,6 +6,7 @@ import { BookingCalendar } from "@/components/BookingCalendar";
 import { CallChoiceDialog } from "@/components/CallChoiceDialog";
 import { CallbackForm } from "@/components/CallbackForm";
 import { HousePriceGrid } from "@/components/HousePriceGrid";
+import { HouseGallery } from "@/components/HouseGallery";
 import { Container } from "@/components/ui/Container";
 import { getHouseBySlug } from "@/lib/houses";
 import { PHONE_PRIMARY, PHONE_PRIMARY_HREF } from "@/lib/constants";
@@ -35,6 +35,7 @@ export default async function HouseDetailPage({
   const house = await getHouseBySlug(slug);
   if (!house) notFound();
   const minimumPrice = getMinimumHousePrice(house.prices, house.pricePerNight);
+  const galleryImages = Array.from(new Set([house.mainImage, ...house.gallery].filter(Boolean)));
 
   return (
     <>
@@ -56,13 +57,7 @@ export default async function HouseDetailPage({
 
       <section className="bg-forest-950 pb-14">
         <Container>
-          <div className="grid gap-3 overflow-hidden rounded-[1.5rem] sm:grid-cols-2 sm:rounded-[2rem] lg:grid-cols-[1.6fr_.7fr] lg:grid-rows-2">
-            {house.gallery.slice(0, 3).map((image, index) => (
-              <div key={`${image}-${index}`} className={`relative min-h-[220px] overflow-hidden ${index === 0 ? "min-h-[240px] sm:col-span-2 sm:min-h-[360px] lg:col-span-1 lg:row-span-2 lg:min-h-[620px]" : "lg:min-h-0"}`}>
-                <Image src={image} alt={`${house.name} — ${index === 0 ? "вигляд ззовні" : `інтер’єр ${index}`}`} fill priority={index === 0} className="object-cover transition duration-700 hover:scale-[1.02]" sizes={index === 0 ? "(max-width: 1024px) 100vw, 70vw" : "(max-width: 1024px) 50vw, 30vw"} />
-              </div>
-            ))}
-          </div>
+          <HouseGallery images={galleryImages} houseName={house.name} />
         </Container>
       </section>
 
