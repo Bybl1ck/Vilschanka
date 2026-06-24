@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
-import { ADMIN_COOKIE } from "@/lib/auth";
+import { clearAdminSession, requireAdmin } from "@/lib/auth";
 
-export async function POST() {
-  const response = NextResponse.json({ ok: true });
-  response.cookies.set(ADMIN_COOKIE, "", { expires: new Date(0), path: "/" });
-  return response;
+export async function POST(request: Request) {
+  const denied = await requireAdmin(request);
+  if (denied) return denied;
+
+  await clearAdminSession();
+  return NextResponse.json({ success: true }, {
+    headers: { "Cache-Control": "no-store, max-age=0" },
+  });
 }

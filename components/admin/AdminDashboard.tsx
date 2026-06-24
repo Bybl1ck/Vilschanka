@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Check, HousePlus, LoaderCircle, Save, Trash2, Upload } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { BookingCalendar } from "@/components/BookingCalendar";
+import { ADMIN_LOGIN_PATH } from "@/lib/admin-paths";
 import { getMinimumHousePrice, isValidWeeklyPrices, resolveWeeklyPrices } from "@/lib/pricing";
 import type { House, HousePriceKey } from "@/types/house";
 
@@ -52,6 +53,14 @@ export function AdminDashboard({ initialHouses }: { initialHouses: House[] }) {
   const [uploadError, setUploadError] = useState("");
 
   const isNew = draft?.id === "";
+
+  function handleExpiredSession() {
+    setStatus("error");
+    setMessage("Сесія завершилася. Увійдіть знову.");
+    router.push(ADMIN_LOGIN_PATH);
+    router.refresh();
+  }
+
   function chooseHouse(house: House) {
     setSelectedId(house.id);
     setDraft(editableHouse(house));
@@ -82,7 +91,15 @@ export function AdminDashboard({ initialHouses }: { initialHouses: House[] }) {
     files.forEach((file) => formData.append("files", file));
 
     try {
-      const response = await fetch("/api/upload", { method: "POST", body: formData });
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
+      if (response.status === 401) {
+        handleExpiredSession();
+        throw new Error("Сесія завершилася. Увійдіть знову.");
+      }
       const body = await response.json() as UploadResponse;
       if (!response.ok || !body.paths?.length) {
         throw new Error(body.error || "Не вдалося завантажити зображення.");
@@ -119,26 +136,36 @@ export function AdminDashboard({ initialHouses }: { initialHouses: House[] }) {
     };
     setStatus("saving");
     setMessage("");
-    const response = await fetch(isNew ? "/api/houses" : `/api/houses/${draft.id}`, {
-      method: isNew ? "POST" : "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(normalizedDraft),
-    });
-    const body = await response.json();
+    try {
+      const response = await fetch(isNew ? "/api/houses" : `/api/houses/${draft.id}`, {
+        method: isNew ? "POST" : "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(normalizedDraft),
+      });
+      if (response.status === 401) {
+        handleExpiredSession();
+        return;
+      }
+      const body = await response.json() as House | { error?: string };
 
-    if (!response.ok) {
+      if (!response.ok || "error" in body) {
+        throw new Error("error" in body ? body.error : undefined);
+      }
+
+      const saved = body as House;
+      setHouses((current) => isNew ? [...current, saved] : current.map((item) => item.id === saved.id ? saved : item));
+      setSelectedId(saved.id);
+      setDraft(editableHouse(saved));
+      setStatus("saved");
+      setMessage("Зміни збережено й уже видно відвідувачам сайту.");
+      router.refresh();
+    } catch (error) {
       setStatus("error");
-      setMessage(body.error || "Не вдалося зберегти зміни");
-      return;
+      setMessage(error instanceof Error && error.message
+        ? error.message
+        : "Не вдалося зберегти зміни. Спробуйте ще раз.");
     }
-
-    const saved = body as House;
-    setHouses((current) => isNew ? [...current, saved] : current.map((item) => item.id === saved.id ? saved : item));
-    setSelectedId(saved.id);
-    setDraft(saved);
-    setStatus("saved");
-    setMessage("Зміни збережено й уже видно відвідувачам сайту.");
-    router.refresh();
   }
 
   async function removeHouse() {
@@ -146,7 +173,14 @@ export function AdminDashboard({ initialHouses }: { initialHouses: House[] }) {
     setStatus("deleting");
     setMessage("");
     try {
-      const response = await fetch(`/api/houses/${draft.id}`, { method: "DELETE" });
+      const response = await fetch(`/api/houses/${draft.id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (response.status === 401) {
+        handleExpiredSession();
+        return;
+      }
       const body = await response.json() as { error?: string };
       if (!response.ok) throw new Error(body.error || "Не вдалося видалити будиночок.");
 

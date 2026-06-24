@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Archive, CheckCircle2, Clock3, LoaderCircle, Phone, RefreshCw, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ADMIN_LOGIN_PATH } from "@/lib/admin-paths";
 import { formatUkrainianPhone, phoneToTelHref } from "@/lib/phone";
 import type { CallbackRequest, CallbackRequestStatus } from "@/types/callback-request";
 
@@ -51,6 +53,7 @@ function formatSelectedDate(value: string) {
 }
 
 export function CallbackRequestsPanel({ initialRequests }: { initialRequests: CallbackRequest[] }) {
+  const router = useRouter();
   const [requests, setRequests] = useState(() => sortRequests(initialRequests));
   const [activeStatus, setActiveStatus] = useState<CallbackRequestStatus>("new");
   const [updatingId, setUpdatingId] = useState<string | null>(null);
@@ -61,13 +64,28 @@ export function CallbackRequestsPanel({ initialRequests }: { initialRequests: Ca
   const statusMutationInFlight = useRef(false);
   const mutationVersion = useRef(0);
 
+  const handleExpiredSession = useCallback(() => {
+    const message = "Сесія завершилася. Увійдіть знову.";
+    setRefreshError(message);
+    setActionError(message);
+    router.push(ADMIN_LOGIN_PATH);
+    router.refresh();
+  }, [router]);
+
   const fetchRequests = useCallback(async () => {
     if (refreshing.current || statusMutationInFlight.current) return;
     refreshing.current = true;
     const versionAtStart = mutationVersion.current;
 
     try {
-      const response = await fetch("/api/callback-requests", { cache: "no-store" });
+      const response = await fetch("/api/callback-requests", {
+        cache: "no-store",
+        credentials: "include",
+      });
+      if (response.status === 401) {
+        handleExpiredSession();
+        return;
+      }
       const body = await response.json() as CallbackRequest[] | { error?: string };
       if (!response.ok || !Array.isArray(body)) throw new Error("Не вдалося оновити заявки.");
 
@@ -83,7 +101,7 @@ export function CallbackRequestsPanel({ initialRequests }: { initialRequests: Ca
     } finally {
       refreshing.current = false;
     }
-  }, []);
+  }, [handleExpiredSession]);
 
   useEffect(() => {
     void fetchRequests();
@@ -100,9 +118,14 @@ export function CallbackRequestsPanel({ initialRequests }: { initialRequests: Ca
     try {
       const response = await fetch(`/api/callback-requests/${id}`, {
         method: "PATCH",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
       });
+      if (response.status === 401) {
+        handleExpiredSession();
+        return;
+      }
       const body = await response.json() as CallbackRequest | { error?: string };
       if (!response.ok || "error" in body) throw new Error("Не вдалося змінити статус заявки. Спробуйте ще раз.");
       setRequests((current) => sortRequests(current.map((item) => item.id === id ? body as CallbackRequest : item)));
@@ -125,7 +148,14 @@ export function CallbackRequestsPanel({ initialRequests }: { initialRequests: Ca
     setActionError("");
 
     try {
-      const response = await fetch(`/api/callback-requests/${id}`, { method: "DELETE" });
+      const response = await fetch(`/api/callback-requests/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (response.status === 401) {
+        handleExpiredSession();
+        return;
+      }
       const body = await response.json() as { success?: boolean; error?: string };
       if (!response.ok || !body.success) throw new Error(body.error);
 

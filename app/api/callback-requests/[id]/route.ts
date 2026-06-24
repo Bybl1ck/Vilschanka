@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { isAdmin } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { deleteCallbackRequest, updateCallbackRequestStatus } from "@/lib/callback-requests";
 import type { CallbackRequestStatus } from "@/types/callback-request";
 
@@ -8,9 +8,8 @@ export const dynamic = "force-dynamic";
 const allowedStatuses = new Set<CallbackRequestStatus>(["new", "called", "archived"]);
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  if (!(await isAdmin())) {
-    return NextResponse.json({ error: "Потрібен вхід до адмін-панелі." }, { status: 401 });
-  }
+  const denied = await requireAdmin(request);
+  if (denied) return denied;
 
   try {
     const { id } = await params;
@@ -28,10 +27,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
 }
 
-export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
-  if (!(await isAdmin())) {
-    return NextResponse.json({ error: "Потрібен вхід до адмін-панелі." }, { status: 401 });
-  }
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const denied = await requireAdmin(request);
+  if (denied) return denied;
 
   try {
     const { id } = await params;

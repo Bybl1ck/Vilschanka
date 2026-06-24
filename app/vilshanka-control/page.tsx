@@ -2,12 +2,13 @@ import { redirect } from "next/navigation";
 import { ShieldCheck } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { LoginForm } from "@/components/admin/LoginForm";
-import { isAdmin } from "@/lib/auth";
+import { ADMIN_PANEL_PATH, isAdminAuthenticated } from "@/lib/auth";
 
 export const metadata = { title: "Вхід до адмін-панелі" };
+export const dynamic = "force-dynamic";
 
 export default async function AdminLoginPage() {
-  if (await isAdmin()) redirect("/admin/panel");
+  if (await isAdminAuthenticated()) redirect(ADMIN_PANEL_PATH);
 
   return (
     <section className="relative flex min-h-[calc(100vh-76px)] items-center justify-center overflow-hidden bg-forest-900 px-5 py-12">

@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import { KeyRound, LoaderCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { ADMIN_PANEL_PATH } from "@/lib/admin-paths";
 
 export function LoginForm() {
   const router = useRouter();
@@ -15,21 +16,27 @@ export function LoginForm() {
     setError("");
     setLoading(true);
 
-    const response = await fetch("/api/admin/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password }),
-    });
+    try {
+      const response = await fetch("/api/admin/login", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+      const body = await response.json() as { success?: boolean; error?: string };
+      if (!response.ok || !body.success) {
+        setError(body.error || "Не вдалося увійти");
+        return;
+      }
 
-    setLoading(false);
-    if (!response.ok) {
-      const body = await response.json();
-      setError(body.error || "Не вдалося увійти");
-      return;
+      setPassword("");
+      router.push(ADMIN_PANEL_PATH);
+      router.refresh();
+    } catch {
+      setError("Не вдалося з’єднатися з сервером. Спробуйте ще раз.");
+    } finally {
+      setLoading(false);
     }
-
-    router.push("/admin/panel");
-    router.refresh();
   }
 
   return (

@@ -1,20 +1,34 @@
 import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
-import { isAdmin } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { createHouse, getHouses } from "@/lib/houses";
 import { getMinimumHousePrice, isValidWeeklyPrices, resolveWeeklyPrices } from "@/lib/pricing";
 import type { House } from "@/types/house";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function GET() {
-  return NextResponse.json(await getHouses());
+  try {
+    return NextResponse.json(await getHouses(), {
+      headers: { "Cache-Control": "no-store, max-age=0" },
+    });
+  } catch (error) {
+    console.error("Не вдалося отримати будиночки:", error);
+    return NextResponse.json({ error: "Не вдалося завантажити будиночки." }, { status: 500 });
+  }
 }
 
 export async function POST(request: Request) {
-  if (!(await isAdmin())) return NextResponse.json({ error: "Потрібен вхід" }, { status: 401 });
+  const denied = await requireAdmin(request);
+  if (denied) return denied;
 
-  const body = (await request.json()) as Partial<House>;
+  let body: Partial<House>;
+  try {
+    body = (await request.json()) as Partial<House>;
+  } catch {
+    return NextResponse.json({ error: "Некоректні дані будиночка." }, { status: 400 });
+  }
   if (!body.name?.trim() || !body.slug?.trim()) {
     return NextResponse.json({ error: "Вкажіть назву та адресу сторінки" }, { status: 400 });
   }
@@ -46,5 +60,10 @@ export async function POST(request: Request) {
     bookedDates: body.bookedDates || [],
   };
 
-  return NextResponse.json(await createHouse(house), { status: 201 });
+  try {
+    return NextResponse.json(await createHouse(house), { status: 201 });
+  } catch (error) {
+    console.error("Не вдалося створити будиночок:", error);
+    return NextResponse.json({ error: "Не вдалося зберегти зміни. Спробуйте ще раз." }, { status: 500 });
+  }
 }

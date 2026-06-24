@@ -4,15 +4,16 @@ import Link from "next/link";
 import { ExternalLink, LogOut, ShieldCheck } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { BrandLogo } from "@/components/BrandLogo";
+import { ADMIN_LOGIN_PATH, ADMIN_PANEL_PATH } from "@/lib/admin-paths";
 
 export function AdminHeader() {
   const pathname = usePathname();
   const router = useRouter();
-  const isPanel = pathname.startsWith("/admin/panel");
+  const isPanel = pathname.startsWith(ADMIN_PANEL_PATH);
 
   async function logout() {
-    await fetch("/api/admin/logout", { method: "POST" });
-    router.push("/admin");
+    await fetch("/api/admin/logout", { method: "POST", credentials: "include" });
+    router.push(ADMIN_LOGIN_PATH);
     router.refresh();
   }
 

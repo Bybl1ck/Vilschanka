@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { getSupabase } from "@/lib/supabase";
+import { getSupabase, getSupabaseAdmin } from "@/lib/supabase";
 import type {
   CallbackRequest,
   CallbackRequestStatus,
@@ -45,7 +45,7 @@ function mapCallbackRequest(row: CallbackRequestRow): CallbackRequest {
 }
 
 export async function getCallbackRequests(): Promise<CallbackRequest[]> {
-  const { data, error } = await getSupabase()
+  const { data, error } = await getSupabaseAdmin()
     .from("callback_requests")
     .select("id,name,phone,comment,source,house_name,selected_date,selected_dates,status,created_at")
     .order("created_at", { ascending: false });
@@ -62,9 +62,7 @@ export async function createCallbackRequest(input: CreateCallbackRequestInput): 
       : undefined;
   const selectedDate = input.selectedDate || selectedDates?.[0] || null;
 
-  const { data, error } = await getSupabase()
-    .from("callback_requests")
-    .insert({
+  const row: CallbackRequestRow = {
       id: randomUUID(),
       name: input.name,
       phone: input.phone,
@@ -76,21 +74,22 @@ export async function createCallbackRequest(input: CreateCallbackRequestInput): 
       // Статус завжди задає сервер, значення від клієнта не використовується.
       status: "new",
       created_at: new Date().toISOString(),
-    })
-    .select("id,name,phone,comment,source,house_name,selected_date,selected_dates,status,created_at")
-    .single();
+  };
+  const { error } = await getSupabase()
+    .from("callback_requests")
+    .insert(row);
 
-  if (error || !data) {
-    throw new Error(`Не вдалося створити заявку в Supabase: ${error?.message || "порожня відповідь"}`);
+  if (error) {
+    throw new Error(`Не вдалося створити заявку в Supabase: ${error.message}`);
   }
-  return mapCallbackRequest(data as CallbackRequestRow);
+  return mapCallbackRequest(row);
 }
 
 export async function updateCallbackRequestStatus(
   id: string,
   status: CallbackRequestStatus,
 ): Promise<CallbackRequest | null> {
-  const { data, error } = await getSupabase()
+  const { data, error } = await getSupabaseAdmin()
     .from("callback_requests")
     .update({ status })
     .eq("id", id)
@@ -102,7 +101,7 @@ export async function updateCallbackRequestStatus(
 }
 
 export async function deleteCallbackRequest(id: string): Promise<boolean> {
-  const { data, error } = await getSupabase()
+  const { data, error } = await getSupabaseAdmin()
     .from("callback_requests")
     .delete()
     .eq("id", id)

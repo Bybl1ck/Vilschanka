@@ -12,14 +12,27 @@ copy .env.example .env.local
 npm run dev
 ```
 
-Після запуску відкрийте [http://localhost:3000](http://localhost:3000). Адмін-панель розташована за адресою [http://localhost:3000/admin](http://localhost:3000/admin).
+Після запуску відкрийте [http://localhost:3000](http://localhost:3000). Службовий вхід розташований за адресою [http://localhost:3000/vilshanka-control](http://localhost:3000/vilshanka-control).
 
 Якщо файл `.env.local` не створений, локальний демо-пароль: `vilshanka-admin`. Перед публікацією обов’язково задайте власні `ADMIN_PASSWORD` і `ADMIN_SECRET`.
 
 ## Де змінювати дані
 
-- Будиночки, ціни, зручності та зайняті дати: через `/admin` або у `data/houses.json`.
-- Заявки на зворотний дзвінок: у розділі «Заявки» за адресою `/admin`; локальні дані зберігаються у `data/callback-requests.json`.
+- Будиночки, ціни, зручності, фото-шляхи та зайняті дати: через `/vilshanka-control`; зміни зберігаються в таблиці Supabase `houses`.
+- `data/houses.json` використовується для першого seed і як резервне публічне відображення, якщо Supabase тимчасово недоступний або таблиця ще не створена.
+- Заявки на зворотний дзвінок: у розділі «Заявки» за адресою `/vilshanka-control`; дані зберігаються в таблиці Supabase `callback_requests`.
+
+## Захист адмін-панелі
+
+Адмін-панель використовує підписану HTTP-only cookie-сесію строком на 7 днів. У production обов’язково додайте у Vercel:
+
+```env
+ADMIN_PASSWORD=надійний-пароль
+ADMIN_SECRET=довгий-випадковий-секрет
+SUPABASE_SERVICE_ROLE_KEY=серверний-service-role-key
+```
+
+`ADMIN_SECRET` і `SUPABASE_SERVICE_ROLE_KEY` використовуються лише на сервері та не повинні мати префікс `NEXT_PUBLIC_`. Без `ADMIN_PASSWORD` і `ADMIN_SECRET` production-вхід заблокований; без service role key адмінські операції Supabase заблоковані. Після зміни env виконайте новий deploy, потім застосуйте `supabase/houses.sql` і `supabase/admin-security.sql` у Supabase SQL Editor.
 - Адреса, Google Maps, телефони, Instagram, Facebook і посилання на меню: `lib/constants.ts`.
 - Брендовий логотип: `public/images/logo-vilshanka.png`. Якщо файл ще не доданий, шапка й адмін-вхід автоматично показують текстову версію без помилки layout.
 - Скрін карти: `public/images/location-map.png`. Якщо файл відсутній, контакти автоматично показують синій fallback-блок з адресою та кнопкою маршруту.
@@ -29,9 +42,19 @@ npm run dev
 
 ## Збереження даних
 
-У MVP використано окремий серверний репозиторій `lib/houses.ts`, який зберігає зміни у JSON. Це працює на звичайному Node.js-сервері з постійним диском і дозволяє одразу показувати зміни всім відвідувачам.
+Будиночки зберігаються в таблиці Supabase `houses`. Серверний репозиторій `lib/houses.ts` перетворює snake_case поля бази на camelCase тип `House`, тому публічні компоненти й адмінка не залежать від структури таблиці.
 
-Для розгортання на Vercel або роботи кількох адміністраторів варто замінити реалізацію цього репозиторію на Supabase чи Prisma. Компоненти, API та структура `House` уже відокремлені від способу збереження, тому інтерфейс сайту переписувати не потрібно.
+Перед першим запуском:
+
+1. Виконайте `supabase/houses.sql` у Supabase SQL Editor.
+2. Переконайтеся, що в `.env.local` задані `NEXT_PUBLIC_SUPABASE_URL` і `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` або `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+3. Перенесіть поточні дані командою:
+
+```bash
+npm run seed:houses
+```
+
+Seed використовує `upsert` за `id`, тому його можна запускати повторно без дублювання будиночків. Для посиленого production-захисту серверних записів можна додати `SUPABASE_SERVICE_ROLE_KEY` у Vercel; ця змінна ніколи не повинна мати префікс `NEXT_PUBLIC_`.
 
 Завантаження фото в `public/images/uploads` працює на локальному Node.js-сервері та на сервері з постійним диском. Файлова система Vercel не є постійним сховищем, тому для production потрібно підключити Supabase Storage, Cloudinary, Amazon S3 або інше зовнішнє сховище.
 

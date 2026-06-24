@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { isAdmin } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { createCallbackRequest, getCallbackRequests } from "@/lib/callback-requests";
 import { validateUkrainianName } from "@/lib/callback-validation";
 import { formatUkrainianPhone, isValidUkrainianPhone } from "@/lib/phone";
@@ -46,12 +46,8 @@ function validateRequest(body: Partial<CreateCallbackRequestInput>) {
 }
 
 export async function GET() {
-  if (!(await isAdmin())) {
-    return NextResponse.json({ error: "Потрібен вхід до адмін-панелі." }, {
-      status: 401,
-      headers: { "Cache-Control": "no-store, max-age=0" },
-    });
-  }
+  const denied = await requireAdmin();
+  if (denied) return denied;
   try {
     return NextResponse.json(await getCallbackRequests(), {
       headers: { "Cache-Control": "no-store, max-age=0" },

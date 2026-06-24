@@ -2,7 +2,7 @@ import { randomUUID } from "crypto";
 import { promises as fs } from "fs";
 import path from "path";
 import { NextResponse } from "next/server";
-import { isAdmin } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -31,9 +31,8 @@ function validateSvg(buffer: Buffer) {
 }
 
 export async function POST(request: Request) {
-  if (!(await isAdmin())) {
-    return NextResponse.json({ error: "Потрібен вхід до адмін-панелі." }, { status: 401 });
-  }
+  const denied = await requireAdmin(request);
+  if (denied) return denied;
 
   try {
     const formData = await request.formData();

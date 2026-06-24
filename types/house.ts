@@ -21,4 +21,7 @@ export interface House {
   mainImage: string;
   gallery: string[];
   bookedDates: string[];
+  isActive?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
