@@ -2,6 +2,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 let supabaseClient: SupabaseClient | null = null;
 let supabaseAdminClient: SupabaseClient | null = null;
+let supabaseServiceRoleClient: SupabaseClient | null = null;
 
 function clientOptions() {
   return {
@@ -50,4 +51,18 @@ export function getSupabaseAdmin() {
 
   supabaseAdminClient = createClient(url, key, clientOptions());
   return supabaseAdminClient;
+}
+
+/** Строгий server-only клієнт для Storage та інших привілейованих операцій. */
+export function getSupabaseServiceRole() {
+  if (supabaseServiceRoleClient) return supabaseServiceRoleClient;
+
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) {
+    throw new Error("Не налаштовано NEXT_PUBLIC_SUPABASE_URL або SUPABASE_SERVICE_ROLE_KEY.");
+  }
+
+  supabaseServiceRoleClient = createClient(url, key, clientOptions());
+  return supabaseServiceRoleClient;
 }

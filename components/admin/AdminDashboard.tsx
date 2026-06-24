@@ -12,7 +12,7 @@ const inputClass = "mt-2 min-h-12 w-full rounded-xl border border-stone-300 bg-w
 const acceptedImageTypes = "image/jpeg,image/png,image/webp,image/svg+xml";
 
 type UploadTarget = "main" | "gallery";
-type UploadResponse = { paths?: string[]; error?: string };
+type UploadResponse = { url?: string; urls?: string[]; error?: string };
 
 function createDraft(): House {
   return {
@@ -101,21 +101,25 @@ export function AdminDashboard({ initialHouses }: { initialHouses: House[] }) {
         throw new Error("Сесія завершилася. Увійдіть знову.");
       }
       const body = await response.json() as UploadResponse;
-      if (!response.ok || !body.paths?.length) {
-        throw new Error(body.error || "Не вдалося завантажити зображення.");
+      const uploadedUrls = body.urls?.length ? body.urls : body.url ? [body.url] : [];
+      if (!response.ok || !uploadedUrls.length) {
+        throw new Error("Не вдалося завантажити зображення. Спробуйте ще раз.");
       }
 
       if (target === "main") {
-        update("mainImage", body.paths[0]);
+        update("mainImage", uploadedUrls[0]);
       } else {
         setDraft((current) => current ? {
           ...current,
-          gallery: Array.from(new Set([...current.gallery, ...body.paths!])),
+          gallery: Array.from(new Set([...current.gallery, ...uploadedUrls])),
         } : current);
         setStatus("idle");
       }
+      setMessage("Фото завантажено. Натисніть «Зберегти зміни», щоб оновити будиночок.");
     } catch (error) {
-      setUploadError(error instanceof Error ? error.message : "Не вдалося завантажити зображення.");
+      setUploadError(error instanceof Error && error.message.includes("Сесія завершилася")
+        ? error.message
+        : "Не вдалося завантажити зображення. Спробуйте ще раз.");
     } finally {
       setUploading(null);
     }

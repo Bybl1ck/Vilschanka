@@ -4,7 +4,14 @@ const nextConfig = {
   // Дозволяє dev-клієнту й HMR стабільно працювати при відкритті сайту з телефона у локальній мережі.
   allowedDevOrigins: ["192.168.0.156", "100.101.93.178"],
   images: {
-    remotePatterns: [{ protocol: "https", hostname: "**" }],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "avwwtzlaxlfvfciqgypb.supabase.co",
+        pathname: "/storage/v1/object/public/house-images/**",
+      },
+      { protocol: "https", hostname: "**" },
+    ],
   },
   async headers() {
     return [

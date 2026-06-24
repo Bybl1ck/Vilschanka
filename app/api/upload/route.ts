@@ -1,12 +1,12 @@
-import { randomUUID } from "crypto";
-import { promises as fs } from "fs";
-import path from "path";
+import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth";
+import { getSupabaseServiceRole } from "@/lib/supabase";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+const BUCKET = "house-images";
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES: Record<string, string> = {
   "image/jpeg": ".jpg",
@@ -16,7 +16,8 @@ const ALLOWED_IMAGE_TYPES: Record<string, string> = {
 };
 
 function safeFileStem(fileName: string) {
-  return path.parse(fileName).name
+  return fileName
+    .replace(/\.[^.]+$/, "")
     .normalize("NFKD")
     .replace(/[^a-zA-Z0-9-]+/g, "-")
     .replace(/^-+|-+$/g, "")
@@ -34,21 +35,20 @@ export async function POST(request: Request) {
   const denied = await requireAdmin(request);
   if (denied) return denied;
 
+  const uploadedPaths: string[] = [];
   try {
     const formData = await request.formData();
     const files = formData.getAll("files").filter((entry): entry is File => entry instanceof File);
-
     if (!files.length) {
       return NextResponse.json({ error: "Оберіть щонайменше одне зображення." }, { status: 400 });
     }
 
     const uploads = await Promise.all(files.map(async (file) => {
-      if (!ALLOWED_IMAGE_TYPES[file.type]) {
-        throw new UploadError(`Файл «${file.name}» має непідтримуваний формат. Дозволено JPG, PNG, WebP або SVG.`);
+      const extension = ALLOWED_IMAGE_TYPES[file.type];
+      if (!extension) {
+        throw new UploadError(`Файл «${file.name}» має непідтримуваний формат.`);
       }
-      if (!file.size) {
-        throw new UploadError(`Файл «${file.name}» порожній.`);
-      }
+      if (!file.size) throw new UploadError(`Файл «${file.name}» порожній.`);
       if (file.size > MAX_FILE_SIZE) {
         throw new UploadError(`Файл «${file.name}» завеликий. Максимальний розмір — 5 МБ.`);
       }
@@ -57,26 +57,42 @@ export async function POST(request: Request) {
       if (file.type === "image/svg+xml" && !validateSvg(buffer)) {
         throw new UploadError(`SVG-файл «${file.name}» містить небезпечний або некоректний вміст.`);
       }
-      return { file, buffer };
+      return { file, buffer, extension };
     }));
 
-    const uploadsDirectory = path.join(process.cwd(), "public", "images", "uploads");
-    await fs.mkdir(uploadsDirectory, { recursive: true });
+    const supabase = getSupabaseServiceRole();
+    const now = new Date();
+    const directory = `houses/${now.getUTCFullYear()}/${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
+    const urls: string[] = [];
 
-    const paths: string[] = [];
-    for (const { file, buffer } of uploads) {
-      const extension = ALLOWED_IMAGE_TYPES[file.type];
-      const fileName = `${Date.now()}-${randomUUID().slice(0, 8)}-${safeFileStem(file.name)}${extension}`;
-      await fs.writeFile(path.join(uploadsDirectory, fileName), buffer);
-      paths.push(`/images/uploads/${fileName}`);
+    for (const { file, buffer, extension } of uploads) {
+      const objectPath = `${directory}/${Date.now()}-${randomUUID()}-${safeFileStem(file.name)}${extension}`;
+      const { error } = await supabase.storage.from(BUCKET).upload(objectPath, buffer, {
+        contentType: file.type,
+        cacheControl: "31536000",
+        upsert: false,
+      });
+      if (error) throw new Error(`Supabase Storage: ${error.message}`);
+      uploadedPaths.push(objectPath);
+
+      const { data } = supabase.storage.from(BUCKET).getPublicUrl(objectPath);
+      if (!data.publicUrl) throw new Error("Supabase Storage не повернув public URL.");
+      urls.push(data.publicUrl);
     }
 
-    return NextResponse.json({ paths });
+    return NextResponse.json({ url: urls[0], urls });
   } catch (error) {
+    if (uploadedPaths.length) {
+      try {
+        await getSupabaseServiceRole().storage.from(BUCKET).remove(uploadedPaths);
+      } catch (cleanupError) {
+        console.error("Не вдалося очистити частково завантажені зображення:", cleanupError);
+      }
+    }
     if (error instanceof UploadError) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
-    console.error("Не вдалося завантажити зображення:", error);
+    console.error("Не вдалося завантажити зображення в Supabase Storage:", error);
     return NextResponse.json({ error: "Не вдалося завантажити зображення. Спробуйте ще раз." }, { status: 500 });
   }
 }
