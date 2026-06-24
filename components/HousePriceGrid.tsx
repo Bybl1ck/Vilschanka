@@ -1,5 +1,5 @@
 import { CalendarDays } from "lucide-react";
-import { getCurrentPriceKey, HOUSE_PRICE_KEYS, HOUSE_PRICE_LABELS, resolveWeeklyPrices } from "@/lib/pricing";
+import { getTodayPrice, getTodayPriceKey, HOUSE_PRICE_KEYS, HOUSE_PRICE_LABELS, resolveWeeklyPrices } from "@/lib/pricing";
 import type { HouseWeeklyPrices } from "@/types/house";
 
 export function HousePriceGrid({
@@ -12,7 +12,9 @@ export function HousePriceGrid({
   compact?: boolean;
 }) {
   const resolved = resolveWeeklyPrices(prices, fallback);
-  const activeKey = getCurrentPriceKey();
+  const now = new Date();
+  const activeKey = getTodayPriceKey(now);
+  const todayPrice = getTodayPrice(prices, fallback, now);
 
   return (
     <div className={compact ? "mt-6" : "rounded-[1.5rem] border border-gold/35 bg-white p-5 shadow-soft sm:p-7"}>
@@ -30,7 +32,7 @@ export function HousePriceGrid({
                 {active && <span className="rounded-full bg-forest-900 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white">Сьогодні</span>}
               </div>
               <p className={`mt-2 whitespace-nowrap font-display font-bold text-forest-900 ${compact ? "text-lg" : "text-2xl"}`}>
-                {resolved[key].toLocaleString("uk-UA")} <span className="font-sans text-xs font-bold">грн</span>
+                {(active ? todayPrice : resolved[key]).toLocaleString("uk-UA")} <span className="font-sans text-xs font-bold">грн</span>
               </p>
             </div>
           );

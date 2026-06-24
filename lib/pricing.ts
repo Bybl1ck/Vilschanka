@@ -9,12 +9,49 @@ export const HOUSE_PRICE_LABELS: Record<HousePriceKey, string> = {
   sat: "Сб",
 };
 
+export type KyivWeekday = "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday";
+
+const KYIV_WEEKDAY_FORMATTER = new Intl.DateTimeFormat("en-US", {
+  weekday: "long",
+  timeZone: "Europe/Kyiv",
+});
+
+const PRICE_KEY_BY_WEEKDAY: Record<KyivWeekday, HousePriceKey> = {
+  Monday: "monWed",
+  Tuesday: "monWed",
+  Wednesday: "monWed",
+  Thursday: "thu",
+  Friday: "friSun",
+  Saturday: "sat",
+  Sunday: "friSun",
+};
+
+export function getKyivWeekday(date = new Date()): KyivWeekday {
+  return KYIV_WEEKDAY_FORMATTER.format(date) as KyivWeekday;
+}
+
+export function getTodayPriceKey(date = new Date()): HousePriceKey {
+  return PRICE_KEY_BY_WEEKDAY[getKyivWeekday(date)];
+}
+
+/** Зворотна сумісність для компонентів, які використовували стару назву. */
 export function getCurrentPriceKey(date = new Date()): HousePriceKey {
-  const day = date.getDay();
-  if (day >= 1 && day <= 3) return "monWed";
-  if (day === 4) return "thu";
-  if (day === 6) return "sat";
-  return "friSun";
+  return getTodayPriceKey(date);
+}
+
+export function getTodayPrice(
+  prices: Partial<HouseWeeklyPrices> | undefined,
+  fallback: number,
+  date = new Date(),
+) {
+  const todayPrice = prices?.[getTodayPriceKey(date)];
+  if (isPositivePrice(todayPrice)) return Number(todayPrice);
+  if (isPositivePrice(fallback)) return Number(fallback);
+
+  const firstAvailable = HOUSE_PRICE_KEYS
+    .map((key) => prices?.[key])
+    .find(isPositivePrice);
+  return firstAvailable ? Number(firstAvailable) : 0;
 }
 
 export function isValidWeeklyPrices(value: unknown): value is HouseWeeklyPrices {
@@ -39,5 +76,9 @@ export function getMinimumHousePrice(prices: Partial<HouseWeeklyPrices> | undefi
 }
 
 function validPrice(value: number | undefined, fallback: number) {
-  return Number.isFinite(value) && Number(value) > 0 ? Number(value) : fallback;
+  return isPositivePrice(value) ? Number(value) : fallback;
+}
+
+function isPositivePrice(value: unknown): value is number {
+  return Number.isFinite(value) && Number(value) > 0;
 }
